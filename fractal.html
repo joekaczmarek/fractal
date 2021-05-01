@@ -5,21 +5,29 @@
 </head>
 
 <body>
-    <canvas id="fractal" width="600" height="600"></canvas>
-    <br>
-    <br>
-    <button id="pp-button">Play/Pause</button>
-    <button id="reset-button" type="button">Reset</button>
+    <div><canvas id="fractal" width="600" height="600"></canvas></div>
+    <div>
+        <button id="pp-button">Auto Play</button>
+        <button id="reset-button" type="button">Reset</button>
+    </div>
+    <div>
+        <p>
+            Place your mouse cursor in the image. Use the cursor to move left, right, up and down.
+        </p>
+        <p>
+            Alternatively, select autoplay.
+        </p>
+    </div>
 
     <script>
         // Inspired by http://slicker.me/fractals/fractals.htm
 
         var canvas = document.getElementById("fractal");
         var context = canvas.getContext('2d');
-        var play = true;
+
         var config = {
-            'startX': -1.5,
-            'startY': -1.5,
+            'startX': -3,
+            'startY': -3,
             'scale': 25.0
         }
 
@@ -37,11 +45,16 @@
         var iterations = 255;
 
 
+        var play = false;
+        var autoplay = false;
         var zoomFactor = 1.0 + zoomA;
         var pixels = [];
 
+        var mouseCX = -1;
+        var mouseCY = -1;
+
         function drawFractal() {
-            console.log(zoomFactor, scale);
+            console.log(zoomFactor, scale, startX, startY);
             for (var x = 0; x < simWidth; x++) {
                 pixels.push(Array(simWidth).fill(0));
 
@@ -70,13 +83,39 @@
                 }
             }
 
-            zoom();
+
+            if (autoplay) {
+                autozoom();
+            }
+            else {
+                center();
+                zoom();
+            }
 
             if (play)
                 window.requestAnimationFrame(drawFractal);
         }
 
+        document.getElementById('fractal').addEventListener('mousemove', function (evt) {
+            var rect = canvas.getBoundingClientRect();
+            mouseCX = evt.clientX - rect.left;
+            mouseCY = evt.clientY - rect.top;
+        });
+
+        function center() {
+            console.log("ORIG", startX, startY);
+            startX = startX + ((mouseCX - 300) / scale) / 30;
+            startY = startY + ((mouseCY - 300) / scale) / 30;
+            console.log("CALC", mouseCX, mouseCY, startX, startY);
+        }
+
         function zoom() {
+            scale *= zoomFactor;
+            var log = Math.log10(scale);
+            zoomFactor = 1.0 + (zoomA / (log / 2));
+        }
+
+        function autozoom() {
             var zoom = calculateNextZoom();
 
             /*
@@ -155,16 +194,39 @@
 
         window.requestAnimationFrame(drawFractal);
 
-        document.getElementById('pp-button').addEventListener('click', function () {
-            if (play) {
-                play = false;
-            }
-            else {
+        // mouse
+
+        document.getElementById('fractal').addEventListener('mouseover', function () {
+            if (!autoplay) {
                 play = true;
                 window.requestAnimationFrame(drawFractal);
             }
         });
+
+        document.getElementById('fractal').addEventListener('mouseout', function () {
+            if (!autoplay) {
+                play = false;
+            }
+        });
+
+        // buttons
+
+        document.getElementById('pp-button').addEventListener('click', function () {
+            if (play) {
+                play = false;
+                autoplay = false;
+            }
+            else {
+                play = true;
+                autoplay = true;
+                window.requestAnimationFrame(drawFractal);
+            }
+        });
+
         document.getElementById('reset-button').addEventListener('click', function () {
+            play = false;
+            autoplay = false;
+
             startX = config['startX'];
             startY = config['startY'];
             scale = config['scale'];
