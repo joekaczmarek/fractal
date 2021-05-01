@@ -1,0 +1,176 @@
+<html>
+
+<head>
+    <title>Infinite Complexity</title>
+</head>
+
+<body>
+    <canvas id="fractal" width="600" height="600"></canvas>
+    <br>
+    <br>
+    <button id="pp-button">Play/Pause</button>
+    <button id="reset-button" type="button">Reset</button>
+
+    <script>
+        // Inspired by http://slicker.me/fractals/fractals.htm
+
+        var canvas = document.getElementById("fractal");
+        var context = canvas.getContext('2d');
+        var play = true;
+        var config = {
+            'startX': -1.5,
+            'startY': -1.5,
+            'scale': 25.0
+        }
+
+        var startX = config['startX'];
+        var startY = config['startY'];
+        var scale = config['scale'];
+
+        var zoomA = 0.05;
+
+        var simWidth = 150;
+        var simHeight = 150;
+        var simXScale = 4;
+        var simYScale = 4;
+
+        var iterations = 255;
+
+
+        var zoomFactor = 1.0 + zoomA;
+        var pixels = [];
+
+        function drawFractal() {
+            console.log(zoomFactor, scale);
+            for (var x = 0; x < simWidth; x++) {
+                pixels.push(Array(simWidth).fill(0));
+
+                for (var y = 0; y < simHeight; y++) {
+                    var i = 0;
+                    var cx = startX + x / scale;
+                    var cy = startY + y / scale;
+                    var zx = 0;
+                    var zy = 0;
+
+                    do {
+                        var xt = zx * zy;
+                        zx = zx * zx - zy * zy + cx;
+                        zy = 2 * xt + cy;
+                        i++;
+                    } while (i < iterations && (zx * zx + zy * zy) < 4);
+
+                    var pixValue = Math.round((i / iterations) * 255);
+                    pixels[x][y] = i;
+
+                    var color = i.toString(16);
+                    context.beginPath();
+                    context.rect(x * simXScale, y * simYScale, simXScale, simYScale);
+                    context.fillStyle = '#' + color + color + color;
+                    context.fill();
+                }
+            }
+
+            zoom();
+
+            if (play)
+                window.requestAnimationFrame(drawFractal);
+        }
+
+        function zoom() {
+            var zoom = calculateNextZoom();
+
+            /*
+            context.beginPath();
+            var size = Math.round(200 / zoomFactor);
+            console.log(zoom[0] * 4, zoom[1] * 4, (zoom[0] + size) * 4, (zoom[1] + size) * 4);
+            context.rect(zoom[0] * 4, zoom[1] * 4, (zoom[0] + size) * 4, (zoom[1] + size) * 4);
+            context.fillStyle = 'rgba(120, 0, 120, 0.5)';
+            context.fill();
+            */
+
+            var cx = startX + zoom[0] / scale;
+            var cy = startY + zoom[1] / scale;
+
+            scale *= zoomFactor;
+
+            startX = cx;
+            startY = cy;
+
+            var log = Math.log10(scale);
+            zoomFactor = 1.0 + (zoomA / (log / 2));
+        }
+
+        function calculateNextZoom() {
+            var sizeX = Math.round(simWidth / zoomFactor);
+            var sizeY = Math.round(simHeight / zoomFactor);
+            var highestMetric = 0;
+            var hX = 0;
+            var hY = 0;
+
+            for (var x = 0; x < simWidth - sizeX; x++) {
+                for (var y = 0; y < simHeight - sizeY; y++) {
+                    var metric = calcStd(x, y, sizeX, sizeY);
+                    if (metric > highestMetric) {
+                        highestMetric = metric;
+                        hX = x;
+                        hY = y;
+                    }
+                }
+            }
+
+            return [hX, hY];
+        }
+
+        function calcStd(startX, startY, width, height) {
+            var valSum = 0;
+            for (var x = startX; x < startX + width; x++) {
+                for (var y = startY; y < startY + height; y++) {
+                    valSum += pixels[x][y];
+                }
+            }
+
+            var average = valSum / (width * height);
+
+            var devSum = 0;
+            for (var x = startX; x < startX + width; x++) {
+                for (var y = startY; y < startY + height; y++) {
+                    devSum += Math.pow(pixels[x][y] - average, 2);
+                }
+            }
+
+            return Math.sqrt(devSum / (width * height));
+        }
+
+        function calcAve(startX, startY, width, height) {
+            var valSum = 0;
+            for (var x = startX; x < startX + width; x++) {
+                for (var y = startY; y < startY + height; y++) {
+                    valSum += pixels[x][y];
+                }
+            }
+
+            var average = valSum / (width * height);
+            return average;
+        }
+
+        window.requestAnimationFrame(drawFractal);
+
+        document.getElementById('pp-button').addEventListener('click', function () {
+            if (play) {
+                play = false;
+            }
+            else {
+                play = true;
+                window.requestAnimationFrame(drawFractal);
+            }
+        });
+        document.getElementById('reset-button').addEventListener('click', function () {
+            startX = config['startX'];
+            startY = config['startY'];
+            scale = config['scale'];
+            window.requestAnimationFrame(drawFractal);
+        });
+    </script>
+</body>
+
+</html>
