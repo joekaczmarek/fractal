@@ -6,7 +6,7 @@
 
 <body>
     <div><canvas id="fractal" width="600" height="600"></canvas></div>
-    <div>
+    <div style="padding-top: 10px">
         <button id="pp-button">Auto Play</button>
         <button id="reset-button" type="button">Reset</button>
     </div>
@@ -16,6 +16,9 @@
         </p>
         <p>
             Alternatively, select autoplay.
+        </p>
+        <p>
+            Joe Kaczmarek
         </p>
     </div>
 
@@ -54,7 +57,7 @@
         var mouseCY = -1;
 
         function drawFractal() {
-            console.log(zoomFactor, scale, startX, startY);
+            // console.log(zoomFactor, scale, startX, startY);
             for (var x = 0; x < simWidth; x++) {
                 pixels.push(Array(simWidth).fill(0));
 
@@ -103,10 +106,10 @@
         });
 
         function center() {
-            console.log("ORIG", startX, startY);
+            // console.log("ORIG", startX, startY);
             startX = startX + ((mouseCX - 300) / scale) / 30;
             startY = startY + ((mouseCY - 300) / scale) / 30;
-            console.log("CALC", mouseCX, mouseCY, startX, startY);
+            // console.log("CALC", mouseCX, mouseCY, startX, startY);
         }
 
         function zoom() {
