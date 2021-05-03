@@ -64,14 +64,13 @@
 
             var fps = 0;
             if (prevTimestamp != null) {
-                console.log(timestamp - prevTimestamp);
                 fps = 1000 / (timestamp - prevTimestamp);
                 adjustedZoomRate = (fps / 30.0) * baseZoomRate;
             }
             prevTimestamp = timestamp;
             zoomFactor = 1.0 + adjustedZoomRate;
 
-            console.log(zoomFactor, scale, startX, startY, fps, adjustedZoomRate);
+            // console.log(zoomFactor, scale, startX, startY, fps, adjustedZoomRate);
             for (var x = 0; x < simWidth; x++) {
                 pixels.push(Array(simWidth).fill(0));
 
@@ -121,10 +120,8 @@
         });
 
         function center() {
-            // console.log("ORIG", startX, startY);
             startX = startX + ((mouseCX - 300) / scale) / 30;
             startY = startY + ((mouseCY - 300) / scale) / 30;
-            // console.log("CALC", mouseCX, mouseCY, startX, startY);
         }
 
         function zoom() {
