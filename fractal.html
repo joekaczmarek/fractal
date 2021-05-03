@@ -29,16 +29,17 @@
         var context = canvas.getContext('2d');
 
         var config = {
-            'startX': -3,
-            'startY': -3,
-            'scale': 25.0
+            'startX': -0.1,
+            'startY': 0.55,
+            'scale': 555
         }
 
         var startX = config['startX'];
         var startY = config['startY'];
         var scale = config['scale'];
 
-        var zoomA = 0.05;
+        var baseZoomRate = 0.1;
+        var adjustedZoomRate = baseZoomRate;
 
         var simWidth = 150;
         var simHeight = 150;
@@ -50,14 +51,27 @@
 
         var play = false;
         var autoplay = false;
-        var zoomFactor = 1.0 + zoomA;
+        var zoomFactor = 1.0 + adjustedZoomRate;
+        var hue = 0;
         var pixels = [];
 
         var mouseCX = -1;
         var mouseCY = -1;
 
-        function drawFractal() {
-            // console.log(zoomFactor, scale, startX, startY);
+        var prevTimestamp = null;
+
+        function drawFractal(timestamp) {
+
+            var fps = 0;
+            if (prevTimestamp != null) {
+                console.log(timestamp - prevTimestamp);
+                fps = 1000 / (timestamp - prevTimestamp);
+                adjustedZoomRate = (fps / 30.0) * baseZoomRate;
+            }
+            prevTimestamp = timestamp;
+            zoomFactor = 1.0 + adjustedZoomRate;
+
+            console.log(zoomFactor, scale, startX, startY, fps, adjustedZoomRate);
             for (var x = 0; x < simWidth; x++) {
                 pixels.push(Array(simWidth).fill(0));
 
@@ -78,13 +92,14 @@
                     var pixValue = Math.round((i / iterations) * 255);
                     pixels[x][y] = i;
 
-                    var color = i.toString(16);
                     context.beginPath();
                     context.rect(x * simXScale, y * simYScale, simXScale, simYScale);
-                    context.fillStyle = '#' + color + color + color;
+                    context.fillStyle = 'hsl(' + (hue % 356) + 
+                        ', 100%, ' + Math.round(i / 255 * 100.0) + '%)';
                     context.fill();
                 }
             }
+            hue += 1;
 
 
             if (autoplay) {
@@ -115,20 +130,11 @@
         function zoom() {
             scale *= zoomFactor;
             var log = Math.log10(scale);
-            zoomFactor = 1.0 + (zoomA / (log / 2));
+            // zoomFactor = 1.0 + (zoomA / (log / 2));
         }
 
         function autozoom() {
             var zoom = calculateNextZoom();
-
-            /*
-            context.beginPath();
-            var size = Math.round(200 / zoomFactor);
-            console.log(zoom[0] * 4, zoom[1] * 4, (zoom[0] + size) * 4, (zoom[1] + size) * 4);
-            context.rect(zoom[0] * 4, zoom[1] * 4, (zoom[0] + size) * 4, (zoom[1] + size) * 4);
-            context.fillStyle = 'rgba(120, 0, 120, 0.5)';
-            context.fill();
-            */
 
             var cx = startX + zoom[0] / scale;
             var cy = startY + zoom[1] / scale;
@@ -139,7 +145,7 @@
             startY = cy;
 
             var log = Math.log10(scale);
-            zoomFactor = 1.0 + (zoomA / (log / 2));
+            // zoomFactor = 1.0 + (zoomA / (log / 2));
         }
 
         function calculateNextZoom() {
